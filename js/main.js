@@ -10,11 +10,12 @@ function fields(metadata, filename, path, schema) {
   // If it's an object.
   else if (typeof schema === 'object' && schema !== null) {
     datum = {};
-    for (const property of ['title', 'description']) {
-      // If the property is set and its value is a string.
-      if (property in schema && toString.call(schema[property]) == '[object String]') {
-        datum[property] = schema[property];
-      }
+    // If the property is set and its value is a string.
+    if ('title' in schema && toString.call(schema.title) == '[object String]') {
+      datum.title = schema.title;
+    }
+    if ('description' in schema && toString.call(schema.description) == '[object String]') {
+      datum.description = new Handlebars.SafeString(marked(schema.description));
     }
     // If the schema has metadata properties.
     if (Object.keys(datum).length) {
@@ -61,9 +62,10 @@ const engine = new Bloodhound({
       if (property == 'title' || property == 'description') {
         tokens = tokens.concat(Bloodhound.tokenizers.nonword(datum[property]));
       }
-      else if (property == 'code') {
+      else if (property == 'code' || property == 'path') {
+        tokens.push(datum[property]);
         // Split on non-word characters, camel case and underscores.
-        // replace is used instead of split, because not all browsers implement lookbehind.
+        // `replace`` is used instead of `split`, because not all browsers implement lookbehind.
         tokens = tokens.concat(datum[property].replace(/([a-z])(?=[A-Z])/, '$1 ').split(/[\W_]+/));
       }
     }
@@ -93,7 +95,7 @@ const engine = new Bloodhound({
               codelist: codelist,
               code: row.Code,
               title: row.Title,
-              description: row.Description
+              description: new Handlebars.SafeString(marked(row.Description || ''))
             });
           }
         }
