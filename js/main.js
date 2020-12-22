@@ -1,4 +1,11 @@
-// @see https://github.com/twitter/typeahead.js/blob/master/doc/bloodhound.md
+function isString(value) {
+  return toString.call(value) == '[object String]';
+}
+
+function isObject(value) {
+  return typeof value === 'object' && value !== null;
+}
+
 function fields(metadata, filename, path, schema) {
   let data = [];
   // If it's an array.
@@ -8,13 +15,13 @@ function fields(metadata, filename, path, schema) {
     }
   }
   // If it's an object.
-  else if (typeof schema === 'object' && schema !== null) {
+  else if (isObject(schema)) {
     datum = {};
     // If the property is set and its value is a string.
-    if ('title' in schema && toString.call(schema.title) == '[object String]') {
+    if ('title' in schema && isString(schema.title)) {
       datum.title = schema.title;
     }
-    if ('description' in schema && toString.call(schema.description) == '[object String]') {
+    if ('description' in schema && isString(schema.description)) {
       datum.description = new Handlebars.SafeString(marked(schema.description));
     }
     // If the schema has metadata properties.
@@ -23,7 +30,7 @@ function fields(metadata, filename, path, schema) {
       datum.schema = filename;
       datum.path = path;
       let types = [];
-      if (toString.call(schema.type) == '[object String]') {
+      if (isString(schema.type)) {
         types = [schema.type];
       }
       else if (schema.type) {
@@ -40,7 +47,7 @@ function fields(metadata, filename, path, schema) {
     for (const property in schema) {
       let newPath;
       // Omit "definitions" and "properties" from the field's path.
-      if (property == 'definitions' && path == '' || property == 'properties' && typeof schema.properties == 'object') {
+      if (property == 'definitions' && path == '' || property == 'properties' && isObject(schema.properties)) {
         newPath = path;
       }
       else if (path == '') {
@@ -58,15 +65,14 @@ function fields(metadata, filename, path, schema) {
 const engine = new Bloodhound({
   datumTokenizer: function (datum) {
     let tokens = [];
-    for (const property in datum) {
-      if (property == 'title' || property == 'description') {
+    for (const property of ['code', 'path', 'title', 'description']) {
+      if (property in datum) {
         tokens = tokens.concat(Bloodhound.tokenizers.nonword(datum[property]));
-      }
-      else if (property == 'code' || property == 'path') {
-        tokens.push(datum[property]);
-        // Split on non-word characters, camel case and underscores.
-        // `replace`` is used instead of `split`, because not all browsers implement lookbehind.
-        tokens = tokens.concat(datum[property].replace(/([a-z])(?=[A-Z])/, '$1 ').split(/[\W_]+/));
+        if (property == 'code' || property == 'path') {
+          // Split on non-word characters, camel case and underscores.
+          // `replace`` is used instead of `split`, because not all browsers implement lookbehind.
+          tokens = tokens.concat(datum[property].replace(/([a-z])(?=[A-Z])/g, '$1 ').split(/[\W_]+/));
+        }
       }
     }
     return tokens;
