@@ -6,7 +6,7 @@ const engine = new Bloodhound({
       if (property == 'title' || property == 'description') {
         tokens = tokens.concat(Bloodhound.tokenizers.nonword(datum[property]));
       }
-      else if (property == 'name') {
+      else if (property == 'code') {
         // Split on non-word characters, camel case and underscores.
         // replace is used instead of split, because not all browsers implement lookbehind.
         tokens = tokens.concat(datum[property].replace(/([a-z])(?=[A-Z])/, '$1 ').split(/[\W_]+/));
@@ -32,10 +32,13 @@ const engine = new Bloodhound({
         for (const codelist in version.codelists) {
           for (const row of version.codelists[codelist]['en'].rows) {
             data.push({
-              extension: id,
-              version: extension.latest_version,
+              extension: {
+                id: id,
+                version: extension.latest_version,
+                name: extension.name.en
+              },
               codelist: codelist,
-              name: row['Code'],
+              code: row['Code'],
               title: row['Title'],
               description: row['Description']
             });
@@ -57,12 +60,12 @@ engine.initialize().done(function () {
       suggestion: Handlebars.compile(`
         <div class="panel panel-default">
           <div class="panel-heading">
-            <strong>{{name}}</strong>
+            <strong>{{#if codelist}}{{code}}{{/if}}</strong>
             <span class="text-muted">
               {{#if codelist}}
-              from <a target="_blank" href="https://extensions.open-contracting.org/en/extensions/{{extension}}/{{version}}/codelists/#{{codelist}}">{{codelist}}</a>
+              in <a target="_blank" href="https://extensions.open-contracting.org/en/extensions/{{extension.id}}/{{extension.version}}/codelists/#{{codelist}}">{{codelist}}</a>
               {{/if}}
-              in <a target="_blank" href="https://extensions.open-contracting.org/en/extensions/{{extension}}/{{version}}/">{{extension}}</a>
+              in <a target="_blank" href="https://extensions.open-contracting.org/en/extensions/{{extension.id}}/{{extension.version}}/">{{extension.name}}</a>
             </span>
           </div>
           <div class="panel-body">
