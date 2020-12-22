@@ -1,3 +1,5 @@
+const searchProperties = ['code', 'path', 'title', 'description'];
+
 function isString(value) {
   return toString.call(value) == '[object String]';
 }
@@ -65,7 +67,7 @@ function fields(metadata, filename, path, schema) {
 const engine = new Bloodhound({
   datumTokenizer: function (datum) {
     let tokens = [];
-    for (const property of ['code', 'path', 'title', 'description']) {
+    for (const property of searchProperties) {
       if (property in datum) {
         tokens = tokens.concat(Bloodhound.tokenizers.nonword(datum[property]));
         if (property == 'code' || property == 'path') {
