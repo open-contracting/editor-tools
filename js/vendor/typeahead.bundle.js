@@ -1463,10 +1463,10 @@
             return _.toStr(str).replace(/^\s*/g, "").replace(/\s{2,}/g, " ");
         };
         _.mixin(Input.prototype, EventEmitter, {
-            _onBlur: function onBlur() {
-                this.resetInputValue();
-                this.trigger("blurred");
-            },
+            // _onBlur: function onBlur() {
+            //     this.resetInputValue();
+            //     this.trigger("blurred");
+            // },
             _onFocus: function onFocus() {
                 this.queryWhenFocused = this.query;
                 this.trigger("focused");
@@ -1885,9 +1885,9 @@
             }
         }
         _.mixin(Menu.prototype, EventEmitter, {
-            _onSelectableClick: function onSelectableClick($e) {
-                this.trigger("selectableClicked", $($e.currentTarget));
-            },
+            // _onSelectableClick: function onSelectableClick($e) {
+            //     this.trigger("selectableClicked", $($e.currentTarget));
+            // },
             _onRendered: function onRendered(type, dataset, suggestions, async) {
                 this.$node.toggleClass(this.classes.empty, this._allDatasetsEmpty());
                 this.trigger("datasetRendered", dataset, suggestions, async);
