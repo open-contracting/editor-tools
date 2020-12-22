@@ -46,8 +46,8 @@ function fields(metadata, filename, path, schema) {
 
     for (const property in schema) {
       let newPath;
-      // Omit "definitions" and "properties" from the field's path.
-      if (property == 'definitions' && path == '' || property == 'properties' && isObject(schema.properties)) {
+      // Omit "definitions" and "properties" from the field's path. (Assumes "properties" is never a field name.)
+      if (property == 'definitions' && path == '' || property == 'properties') {
         newPath = path;
       }
       else if (path == '') {
