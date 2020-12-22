@@ -1,4 +1,59 @@
 // @see https://github.com/twitter/typeahead.js/blob/master/doc/bloodhound.md
+function fields(metadata, filename, path, schema) {
+  let data = [];
+  // If it's an array.
+  if (Array.isArray(schema)) {
+    for (const entry of schema) {
+      data = data.concat(fields(metadata, filename, path, entry));
+    }
+  }
+  // If it's an object.
+  else if (typeof schema === 'object' && schema !== null) {
+    datum = {};
+    for (const property of ['title', 'description']) {
+      // If the property is set and its value is a string.
+      if (property in schema && toString.call(schema[property]) == '[object String]') {
+        datum[property] = schema[property];
+      }
+    }
+    // If the schema has metadata properties.
+    if (Object.keys(datum).length) {
+      datum.extension = metadata;
+      datum.schema = filename;
+      datum.path = path;
+      let types = [];
+      if (toString.call(schema.type) == '[object String]') {
+        types = [schema.type];
+      }
+      else if (schema.type) {
+        types = schema.type;
+      }
+      const index = types.indexOf('null');
+      if (index > -1) {
+        types.splice(index, 1);
+      }
+      datum.type = types.join(', ');
+      data.push(datum);
+    }
+
+    for (const property in schema) {
+      let newPath;
+      // Omit "definitions" and "properties" from the field's path.
+      if (property == 'definitions' && path == '' || property == 'properties' && typeof schema.properties == 'object') {
+        newPath = path;
+      }
+      else if (path == '') {
+        newPath = property;
+      }
+      else {
+        newPath = `${path}.${property}`;
+      }
+      data = data.concat(fields(metadata, filename, newPath, schema[property]));
+    }
+  }
+  return data;
+}
+
 const engine = new Bloodhound({
   datumTokenizer: function (datum) {
     let tokens = [];
@@ -17,30 +72,28 @@ const engine = new Bloodhound({
   queryTokenizer: Bloodhound.tokenizers.nonword,
   prefetch: {
     url: 'https://extensions.open-contracting.org/extensions.json',
-    // TODO
-    cache: false,
     transform: function (response) {
       let data = [];
       for (const id in response) {
         const extension = response[id];
         const version = extension.versions[extension.latest_version];
         const schema = version.schemas['release-schema.json'];
+        const metadata = {
+          id: id,
+          version: extension.latest_version,
+          name: extension.name.en
+        };
         if (schema) {
-          // TODO
-          schema['en']
+          data = data.concat(fields(metadata, 'release-schema.json', '', schema.en));
         }
         for (const codelist in version.codelists) {
-          for (const row of version.codelists[codelist]['en'].rows) {
+          for (const row of version.codelists[codelist].en.rows) {
             data.push({
-              extension: {
-                id: id,
-                version: extension.latest_version,
-                name: extension.name.en
-              },
+              extension: metadata,
               codelist: codelist,
-              code: row['Code'],
-              title: row['Title'],
-              description: row['Description']
+              code: row.Code,
+              title: row.Title,
+              description: row.Description
             });
           }
         }
@@ -60,8 +113,22 @@ engine.initialize().done(function () {
       suggestion: Handlebars.compile(`
         <div class="panel panel-default">
           <div class="panel-heading">
-            <strong>{{#if codelist}}{{code}}{{/if}}</strong>
+            {{#if codelist}}
+            Code:
+            {{else}}
+            Field:
+            {{/if}}
+            <strong>
+              {{#if codelist}}
+              {{code}}
+              {{else}}
+              {{path}}
+              {{/if}}
+            </strong>
             <span class="text-muted">
+              {{#if type}}
+              ({{type}})
+              {{/if}}
               {{#if codelist}}
               in <a target="_blank" href="https://extensions.open-contracting.org/en/extensions/{{extension.id}}/{{extension.version}}/codelists/#{{codelist}}">{{codelist}}</a>
               {{/if}}
