@@ -10,13 +10,11 @@ function isObject(value) {
 
 function fields(metadata, filename, path, schema) {
   let data = [];
-  // If it's an array.
   if (Array.isArray(schema)) {
     for (const entry of schema) {
       data = data.concat(fields(metadata, filename, path, entry));
     }
   }
-  // If it's an object.
   else if (isObject(schema)) {
     datum = {};
     // If the property is set and its value is a string.
