@@ -17,11 +17,10 @@ function fields(metadata, filename, path, schema) {
   }
   else if (isObject(schema)) {
     datum = {};
-    // If the property is set and its value is a string.
-    if ('title' in schema && isString(schema.title)) {
+    if (isString(schema.title)) {
       datum.title = schema.title;
     }
-    if ('description' in schema && isString(schema.description)) {
+    if (isString(schema.description)) {
       datum.description = new Handlebars.SafeString(marked(schema.description));
     }
     // If the schema has metadata properties.
