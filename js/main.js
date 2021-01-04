@@ -1,97 +1,93 @@
-const searchProperties = ['code', 'path', 'title', 'description'];
+const searchProperties = ['code', 'path', 'title', 'description']
 
-function isString(value) {
-  return toString.call(value) == '[object String]';
+function isString (value) {
+  return toString.call(value) == '[object String]'
 }
 
-function isObject(value) {
-  return typeof value === 'object' && value !== null;
+function isObject (value) {
+  return typeof value === 'object' && value !== null
 }
 
-function fields(metadata, filename, path, schema) {
-  let data = [];
+function fields (metadata, filename, path, schema) {
+  let data = []
   if (Array.isArray(schema)) {
     for (const entry of schema) {
-      data = data.concat(fields(metadata, filename, path, entry));
+      data = data.concat(fields(metadata, filename, path, entry))
     }
-  }
-  else if (isObject(schema)) {
-    datum = {};
+  } else if (isObject(schema)) {
+    datum = {}
     if (isString(schema.title)) {
-      datum.title = schema.title;
+      datum.title = schema.title
     }
     if (isString(schema.description)) {
-      datum.description = new Handlebars.SafeString(marked(schema.description));
+      datum.description = new Handlebars.SafeString(marked(schema.description))
     }
     // If the schema has metadata properties.
     if (Object.keys(datum).length) {
-      datum.extension = metadata;
-      datum.schema = filename;
-      datum.path = path;
-      let types = [];
+      datum.extension = metadata
+      datum.schema = filename
+      datum.path = path
+      let types = []
       if (isString(schema.type)) {
-        types = [schema.type];
+        types = [schema.type]
+      } else if (schema.type) {
+        types = schema.type
       }
-      else if (schema.type) {
-        types = schema.type;
-      }
-      const index = types.indexOf('null');
+      const index = types.indexOf('null')
       if (index > -1) {
-        types.splice(index, 1);
+        types.splice(index, 1)
       }
-      datum.type = types.join(', ');
-      data.push(datum);
+      datum.type = types.join(', ')
+      data.push(datum)
     }
 
     for (const property in schema) {
-      let newPath;
+      let newPath
       // Omit "definitions" and "properties" from the field's path. (Assumes "properties" is never a field name.)
       if (property == 'definitions' && path == '' || property == 'properties') {
-        newPath = path;
+        newPath = path
+      } else if (path == '') {
+        newPath = property
+      } else {
+        newPath = `${path}.${property}`
       }
-      else if (path == '') {
-        newPath = property;
-      }
-      else {
-        newPath = `${path}.${property}`;
-      }
-      data = data.concat(fields(metadata, filename, newPath, schema[property]));
+      data = data.concat(fields(metadata, filename, newPath, schema[property]))
     }
   }
-  return data;
+  return data
 }
 
 const engine = new Bloodhound({
   datumTokenizer: function (datum) {
-    let tokens = [];
+    let tokens = []
     for (const property of searchProperties) {
       if (property in datum) {
-        tokens = tokens.concat(Bloodhound.tokenizers.nonword(datum[property]));
+        tokens = tokens.concat(Bloodhound.tokenizers.nonword(datum[property]))
         if (property == 'code' || property == 'path') {
           // Split on non-word characters, camel case and underscores.
           // `replace`` is used instead of `split`, because not all browsers implement lookbehind.
-          tokens = tokens.concat(datum[property].replace(/([a-z])(?=[A-Z])/g, '$1 ').split(/[\W_]+/));
+          tokens = tokens.concat(datum[property].replace(/([a-z])(?=[A-Z])/g, '$1 ').split(/[\W_]+/))
         }
       }
     }
-    return tokens;
+    return tokens
   },
   queryTokenizer: Bloodhound.tokenizers.nonword,
   prefetch: {
     url: 'https://extensions.open-contracting.org/extensions.json',
     transform: function (response) {
-      let data = [];
+      let data = []
       for (const id in response) {
-        const extension = response[id];
-        const version = extension.versions[extension.latest_version];
-        const schema = version.schemas['release-schema.json'];
+        const extension = response[id]
+        const version = extension.versions[extension.latest_version]
+        const schema = version.schemas['release-schema.json']
         const metadata = {
           id: id,
           version: extension.latest_version,
           name: extension.name.en
-        };
+        }
         if (schema) {
-          data = data.concat(fields(metadata, 'release-schema.json', '', schema.en));
+          data = data.concat(fields(metadata, 'release-schema.json', '', schema.en))
         }
         for (const codelist in version.codelists) {
           for (const row of version.codelists[codelist].en.rows) {
@@ -101,14 +97,14 @@ const engine = new Bloodhound({
               code: row.Code,
               title: row.Title,
               description: new Handlebars.SafeString(marked(row.Description || ''))
-            });
+            })
           }
         }
       }
-      return data;
+      return data
     }
   }
-});
+})
 
 engine.initialize().done(function () {
   $('#typeahead').typeahead({
@@ -152,9 +148,9 @@ engine.initialize().done(function () {
           </div>
         </div>`)
     }
-  });
+  })
 
   $('.panel a').on('click', function (event) {
-    return false;
-  });
-});
+    return false
+  })
+})
