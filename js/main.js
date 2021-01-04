@@ -1,7 +1,9 @@
+/* global $, Bloodhound, Handlebars, marked */
+
 const searchProperties = ['code', 'path', 'title', 'description']
 
 function isString (value) {
-  return toString.call(value) == '[object String]'
+  return toString.call(value) === '[object String]'
 }
 
 function isObject (value) {
@@ -15,7 +17,7 @@ function fields (metadata, filename, path, schema) {
       data = data.concat(fields(metadata, filename, path, entry))
     }
   } else if (isObject(schema)) {
-    datum = {}
+    const datum = {}
     if (isString(schema.title)) {
       datum.title = schema.title
     }
@@ -44,9 +46,9 @@ function fields (metadata, filename, path, schema) {
     for (const property in schema) {
       let newPath
       // Omit "definitions" and "properties" from the field's path. (Assumes "properties" is never a field name.)
-      if (property == 'definitions' && path == '' || property == 'properties') {
+      if ((property === 'definitions' && path === '') || property === 'properties') {
         newPath = path
-      } else if (path == '') {
+      } else if (path === '') {
         newPath = property
       } else {
         newPath = `${path}.${property}`
@@ -63,7 +65,7 @@ const engine = new Bloodhound({
     for (const property of searchProperties) {
       if (property in datum) {
         tokens = tokens.concat(Bloodhound.tokenizers.nonword(datum[property]))
-        if (property == 'code' || property == 'path') {
+        if (property === 'code' || property === 'path') {
           // Split on non-word characters, camel case and underscores.
           // `replace`` is used instead of `split`, because not all browsers implement lookbehind.
           tokens = tokens.concat(datum[property].replace(/([a-z])(?=[A-Z])/g, '$1 ').split(/[\W_]+/))
