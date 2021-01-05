@@ -1,4 +1,4 @@
-/* global $, Bloodhound, Handlebars, marked */
+/* global jQuery, Bloodhound, Handlebars, marked */
 
 const searchProperties = ['code', 'path', 'title', 'description']
 
@@ -109,7 +109,7 @@ const engine = new Bloodhound({
 })
 
 engine.initialize().done(function () {
-  $('#typeahead').typeahead({
+  jQuery('#typeahead').typeahead({
     highlight: true
   }, {
     source: engine,
@@ -150,9 +150,5 @@ engine.initialize().done(function () {
           </div>
         </div>`)
     }
-  })
-
-  $('.panel a').on('click', function (event) {
-    return false
   })
 })
