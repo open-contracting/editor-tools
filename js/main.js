@@ -108,7 +108,7 @@ const engine = new Bloodhound({
   }
 })
 
-engine.initialize().done(function () {
+engine.initialize().done(() => {
   jQuery('#typeahead').typeahead({
     highlight: true
   }, {
