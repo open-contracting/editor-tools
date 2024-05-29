@@ -2,15 +2,15 @@
 
 const searchProperties = ['code', 'path', 'title', 'description']
 
-function isString (value) {
+function isString(value) {
   return toString.call(value) === '[object String]'
 }
 
-function isObject (value) {
+function isObject(value) {
   return typeof value === 'object' && value !== null
 }
 
-function fields (metadata, filename, path, schema) {
+function fields(metadata, filename, path, schema) {
   let data = []
   if (Array.isArray(schema)) {
     for (const entry of schema) {
@@ -60,7 +60,7 @@ function fields (metadata, filename, path, schema) {
 }
 
 const engine = new Bloodhound({
-  datumTokenizer: function (datum) {
+  datumTokenizer: (datum) => {
     let tokens = []
     for (const property of searchProperties) {
       if (property in datum) {
@@ -77,7 +77,7 @@ const engine = new Bloodhound({
   queryTokenizer: Bloodhound.tokenizers.nonword,
   prefetch: {
     url: 'https://extensions.open-contracting.org/extensions.json',
-    transform: function (response) {
+    transform: (response) => {
       let data = []
       for (const id in response) {
         const extension = response[id]
@@ -109,46 +109,49 @@ const engine = new Bloodhound({
 })
 
 engine.initialize().done(() => {
-  jQuery('#typeahead').typeahead({
-    highlight: true
-  }, {
-    source: engine,
-    limit: 1000,
-    templates: {
-      suggestion: Handlebars.compile(`
-        <div class="panel panel-default">
-          <div class="panel-heading">
-            {{#if codelist}}
-            Code:
-            {{else}}
-            Field:
-            {{/if}}
-            <strong>
+  jQuery('#typeahead').typeahead(
+    {
+      highlight: true
+    },
+    {
+      source: engine,
+      limit: 1000,
+      templates: {
+        suggestion: Handlebars.compile(`
+          <div class="panel panel-default">
+            <div class="panel-heading">
               {{#if codelist}}
-              {{code}}
+              Code:
               {{else}}
-              {{path}}
+              Field:
               {{/if}}
-            </strong>
-            <span class="text-muted">
-              {{#if type}}
-              ({{type}})
-              {{/if}}
-              {{#if codelist}}
-              in <a target="_blank" href="https://extensions.open-contracting.org/en/extensions/{{extension.id}}/{{extension.version}}/codelists/#{{codelist}}">{{codelist}}</a>
-              {{/if}}
-              in <a target="_blank" href="https://extensions.open-contracting.org/en/extensions/{{extension.id}}/{{extension.version}}/">{{extension.name}}</a>
-            </span>
-          </div>
-          <div class="panel-body">
-            <dl class="dl-horizontal">
-              <dt>Title</dt>
-              <dd>{{title}}</dd>
-              <dt>Description</dt>
-              <dd>{{description}}</dd>
-            </dl>
-          </div>
-        </div>`)
+              <strong>
+                {{#if codelist}}
+                {{code}}
+                {{else}}
+                {{path}}
+                {{/if}}
+              </strong>
+              <span class="text-muted">
+                {{#if type}}
+                ({{type}})
+                {{/if}}
+                {{#if codelist}}
+                in <a target="_blank" href="https://extensions.open-contracting.org/en/extensions/{{extension.id}}/{{extension.version}}/codelists/#{{codelist}}">{{codelist}}</a>
+                {{/if}}
+                in <a target="_blank" href="https://extensions.open-contracting.org/en/extensions/{{extension.id}}/{{extension.version}}/">{{extension.name}}</a>
+              </span>
+            </div>
+            <div class="panel-body">
+              <dl class="dl-horizontal">
+                <dt>Title</dt>
+                <dd>{{title}}</dd>
+                <dt>Description</dt>
+                <dd>{{description}}</dd>
+              </dl>
+            </div>
+          </div>`)
+      }
     }
-  })
+  )
 })
