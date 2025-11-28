@@ -6,4 +6,4 @@ jobs:
     permissions:
       contents: read
     with:
-      filenames: js/main.js
+      filenames: js/main.js  # ignore js/vendor/
