@@ -5,5 +5,3 @@ jobs:
     uses: open-contracting/.github/.github/workflows/js.yml@main
     permissions:
       contents: read
-    with:
-      filenames: js/main.js  # ignore js/vendor/
